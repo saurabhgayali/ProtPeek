@@ -77,6 +77,9 @@ A Python desktop widget to load and display a rotating 3D protein structure from
    ```
    Note: Use `:` instead of `;` for `--add-data` separator on Linux.
 
+## Download Prebuilt Windows Binary [exe] (64-bit)
+[Download](https://github.com/saurabhgayali/ProtPeek/releases/download/v1/ProtPeek.exe])   
+
 ## Usage
 - Enter a **PDB code** (e.g., `1UBQ`) for structures from RCSB PDB
 - Enter a **UniProt ID** (e.g., `Q92793`) for AlphaFold predicted structures
