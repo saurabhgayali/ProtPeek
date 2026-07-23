@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProtPeek - 3D Protein Visualization Widget</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f7fa;
+            --text-primary: #1a1a1a;
+            --text-secondary: #4a4a4a;
+            --border-color: #e0e6ed;
+            --accent-blue: #0066cc;
+            --accent-light-blue: #e6f0ff;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        html.dark-mode {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #e8e8e8;
+            --text-secondary: #b0b0b0;
+            --border-color: #404040;
+            --accent-blue: #4da6ff;
+            --accent-light-blue: #1a3a52;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            --shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.6);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Header with Theme Toggle */
+        header {
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            letter-spacing: -0.5px;
+        }
+
+        .tagline {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .theme-toggle {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            width: 50px;
+            height: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            padding: 2px;
+            transition: background-color 0.3s;
+            position: relative;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--accent-light-blue);
+        }
+
+        .toggle-circle {
+            width: 24px;
+            height: 24px;
+            background-color: var(--accent-blue);
+            border-radius: 50%;
+            transition: transform 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+        }
+
+        html.dark-mode .toggle-circle {
+            transform: translateX(22px);
+        }
+
+        /* Main Content */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        section {
+            margin-bottom: 3rem;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent-blue);
+            font-weight: 700;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            font-weight: 700;
+            border-bottom: 2px solid var(--accent-blue);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.8rem;
+            color: var(--accent-blue);
+            font-weight: 600;
+        }
+
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            line-height: 1.8;
+        }
+
+        .intro-container {
+            background-color: var(--accent-light-blue);
+            border-left: 4px solid var(--accent-blue);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .intro-container p {
+            color: var(--text-primary);
+            margin: 0;
+            font-size: 1.05rem;
+        }
+
+        /* Features Section */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .feature-card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+            box-shadow: var(--shadow);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--accent-blue);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-card h3 {
+            margin-top: 0;
+            font-size: 1.1rem;
+        }
+
+        .feature-card p {
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        /* Download Section */
+        .download-container {
+            background: linear-gradient(135deg, var(--accent-light-blue) 0%, var(--bg-secondary) 100%);
+            border: 2px solid var(--accent-blue);
+            border-radius: 12px;
+            padding: 2.5rem;
+            text-align: center;
+            margin: 2rem 0;
+            box-shadow: var(--shadow);
+        }
+
+        .download-container h2 {
+            border: none;
+            margin-top: 0;
+        }
+
+        .download-btn {
+            display: inline-block;
+            background-color: var(--accent-blue);
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            transition: all 0.3s;
+            border: 2px solid var(--accent-blue);
+            cursor: pointer;
+        }
+
+        .download-btn:hover {
+            background-color: transparent;
+            color: var(--accent-blue);
+            transform: scale(1.05);
+        }
+
+        .download-note {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 1rem;
+        }
+
+        /* Usage Example */
+        .usage-example {
+            background-color: var(--bg-secondary);
+            border-left: 4px solid var(--accent-blue);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .usage-example code {
+            color: var(--accent-blue);
+            font-weight: 600;
+        }
+
+        /* Contributor Section */
+        .contributor-section {
+            background: linear-gradient(135deg, var(--accent-light-blue) 0%, var(--bg-secondary) 100%);
+            border: 2px dashed var(--accent-blue);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .contributor-section h2 {
+            border: none;
+            margin-top: 0;
+            color: var(--accent-blue);
+        }
+
+        .contributor-btn {
+            display: inline-block;
+            background-color: var(--accent-blue);
+            color: white;
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            transition: all 0.3s;
+            border: 2px solid var(--accent-blue);
+        }
+
+        .contributor-btn:hover {
+            background-color: transparent;
+            color: var(--accent-blue);
+            transform: scale(1.05);
+        }
+
+        .platforms-list {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .platform-badge {
+            background-color: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .platform-badge.available {
+            border-color: #4caf50;
+            color: #4caf50;
+            background-color: rgba(76, 175, 80, 0.1);
+        }
+
+        .platform-badge.needed {
+            border-color: #ff9800;
+            color: #ff9800;
+            background-color: rgba(255, 152, 0, 0.1);
+        }
+
+        /* Scientific Details */
+        .scientific-section {
+            background-color: var(--bg-secondary);
+            border-left: 4px solid var(--accent-blue);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+        }
+
+        .reference {
+            background-color: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 0.8rem 0;
+            font-size: 0.9rem;
+            border-left: 3px solid var(--accent-blue);
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+            margin-top: 3rem;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--text-primary);
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            main {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            h2 {
+                font-size: 1.4rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .platforms-list {
+                flex-direction: column;
+            }
+
+            .download-container,
+            .contributor-section {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <div class="logo">ProtPeek</div>
+            <div class="tagline">3D Protein Visualization Widget</div>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()">
+            <span class="toggle-circle">
+                <span id="theme-icon">🌙</span>
+            </span>
+        </button>
+    </header>
+
+    <main>
+        <!-- Introduction -->
+        <section>
+            <h1>ProtPeek</h1>
+            <div class="intro-container">
+                <p><strong>A lightweight desktop widget for rapid visualization of 3D protein structures from PDB and AlphaFold databases.</strong></p>
+            </div>
+        </section>
+
+        <!-- Scientific Overview -->
+        <section>
+            <h2>Scientific Overview</h2>
+            <p>ProtPeek enables researchers, educators, and students to quickly visualize three-dimensional protein structures in real-time. Whether you're studying known crystallographic structures from the <a href="https://www.rcsb.org/" style="color: var(--accent-blue);" target="_blank">RCSB Protein Data Bank (PDB)</a> or exploring AI-predicted structures from <a href="https://www.uniprot.org/help/alphafold" style="color: var(--accent-blue);" target="_blank">AlphaFold</a>, ProtPeek provides an intuitive interface for interactive molecular visualization.</p>
+            
+            <h3>Key Capabilities</h3>
+            <p>The widget supports:</p>
+            <ul style="margin-left: 1.5rem; color: var(--text-secondary);">
+                <li><strong>PDB Code Input:</strong> Direct lookup of crystallographic structures (e.g., 1UBQ for ubiquitin)</li>
+                <li><strong>UniProt ID Input:</strong> Access to AlphaFold predicted structures (e.g., Q92793)</li>
+                <li><strong>Multiple Visualization Styles:</strong> Cartoon ribbon and ball-and-stick representations</li>
+                <li><strong>Real-time Rotation:</strong> Automated clockwise rotation for structure examination</li>
+                <li><strong>Lightweight Design:</strong> 200×200 pixel always-on-top widget for non-intrusive desktop integration</li>
+            </ul>
+        </section>
+
+        <!-- Features -->
+        <section>
+            <h2>Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔬</div>
+                    <h3>Dual Data Sources</h3>
+                    <p>Access both experimental (RCSB PDB) and predicted (AlphaFold) protein structures</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <h3>Multiple Representations</h3>
+                    <p>Switch between cartoon ribbon and ball-and-stick visualization styles</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Lightweight & Fast</h3>
+                    <p>Minimal footprint with instant structure loading and rotation</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Always-On-Top</h3>
+                    <p>Desktop widget that stays visible while you work in other applications</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3>WebGL Visualization</h3>
+                    <p>Powered by 3Dmol.js for interactive, hardware-accelerated rendering</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Real-time Rotation</h3>
+                    <p>Automated clockwise rotation for comprehensive structure examination</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Download Section -->
+        <section>
+            <div class="download-container">
+                <h2>Get Started</h2>
+                <p style="font-size: 1.05rem; margin-bottom: 1rem;">Download ProtPeek for Windows (64-bit)</p>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.95rem;">Single executable file • No installation required • Self-contained</p>
+                <a href="https://github.com/saurabhgayali/ProtPeek/releases/download/v1/ProtPeek.exe" class="download-btn" download>📥 Download ProtPeek.exe (v1.0)</a>
+                <div class="download-note">
+                    <strong>System Requirements:</strong> Windows 7 or later (64-bit) • 50 MB disk space<br>
+                    <strong>Note:</strong> The 3Dmol.js library is bundled with the executable.
+                </div>
+            </div>
+        </section>
+
+        <!-- Usage Instructions -->
+        <section>
+            <h2>Quick Start Guide</h2>
+            <h3>Using ProtPeek</h3>
+            <ol style="margin-left: 1.5rem; color: var(--text-secondary); line-height: 2;">
+                <li><strong>Launch</strong> the ProtPeek executable</li>
+                <li><strong>Enter</strong> a PDB code (4 characters, e.g., <code style="color: var(--accent-blue); background-color: var(--bg-secondary); padding: 0.2rem 0.4rem; border-radius: 3px;">1UBQ</code>) or UniProt ID (6+ characters, e.g., <code style="color: var(--accent-blue); background-color: var(--bg-secondary); padding: 0.2rem 0.4rem; border-radius: 3px;">Q92793</code>)</li>
+                <li><strong>Select</strong> visualization style (Cartoon or Ball & Stick)</li>
+                <li><strong>Click Play</strong> to load and visualize the structure</li>
+                <li><strong>Watch</strong> as the structure rotates for full 3D examination</li>
+            </ol>
+
+            <h3>Example Structures</h3>
+            <div class="usage-example">
+                <p><strong>PDB Examples:</strong></p>
+                <p>• <code>1UBQ</code> - Ubiquitin (small regulatory protein)</p>
+                <p>• <code>2HHB</code> - Hemoglobin (oxygen transport)</p>
+                <p>• <code>1MBN</code> - Myoglobin (oxygen storage)</p>
+                <br>
+                <p><strong>UniProt Examples:</strong></p>
+                <p>• <code>Q92793</code> - AlphaFold predicted structure</p>
+                <p>• <code>P12345</code> - Another example UniProt ID</p>
+            </div>
+        </section>
+
+        <!-- Platform Support -->
+        <section>
+            <div class="contributor-section">
+                <h2>🤝 Help Us Expand</h2>
+                <p style="font-size: 1.05rem; margin-top: 0;">We're seeking community contributions to build and maintain ProtPeek binaries for additional operating systems.</p>
+                
+                <h3>Current Platform Support</h3>
+                <div class="platforms-list">
+                    <div class="platform-badge available">
+                        ✓ Windows (64-bit) v1.0
+                    </div>
+                    <div class="platform-badge needed">
+                        ⚠ macOS (Intel/ARM)
+                    </div>
+                    <div class="platform-badge needed">
+                        ⚠ Linux (Ubuntu/Debian)
+                    </div>
+                </div>
+
+                <p style="margin-top: 1.5rem; font-size: 0.95rem;">
+                    If you can build and test ProtPeek for other platforms, we'd love your contribution! Please submit binaries via pull request to our <a href="https://github.com/saurabhgayali/ProtPeek" style="color: var(--accent-blue);" target="_blank">GitHub repository</a>.
+                </p>
+
+                <a href="https://github.com/saurabhgayali/ProtPeek" class="contributor-btn" target="_blank">🔗 Contribute on GitHub</a>
+            </div>
+        </section>
+
+        <!-- Technical Details -->
+        <section>
+            <h2>Technical Information</h2>
+            
+            <div class="scientific-section">
+                <h3>Technology Stack</h3>
+                <p><strong>Frontend:</strong> 3Dmol.js (WebGL-based molecular visualization)</p>
+                <p><strong>Backend:</strong> Python 3.8+ with PyQt5 and PyQtWebEngine</p>
+                <p><strong>Data Sources:</strong></p>
+                <ul style="margin-left: 1.5rem; color: var(--text-secondary);">
+                    <li><a href="https://www.rcsb.org/" style="color: var(--accent-blue);" target="_blank">RCSB Protein Data Bank (PDB)</a> - Experimental structures</li>
+                    <li><a href="https://www.uniprot.org/" style="color: var(--accent-blue);" target="_blank">UniProt/AlphaFold</a> - AI-predicted structures</li>
+                </ul>
+            </div>
+
+            <div class="scientific-section">
+                <h3>Scientific Foundations</h3>
+                <p><strong>Molecular Visualization:</strong> This application utilizes 3Dmol.js, a powerful JavaScript library for real-time molecular visualization with WebGL acceleration.</p>
+                
+                <div class="reference">
+                    <strong>Citation:</strong><br>
+                    Rego, N., & Koes, D. (2015). 3Dmol.js: molecular visualization with WebGL. <em>Bioinformatics</em>, 31(8), 1322–1324.<br>
+                    <a href="https://doi.org/10.1093/bioinformatics/btu829" style="color: var(--accent-blue);" target="_blank">https://doi.org/10.1093/bioinformatics/btu829</a>
+                </div>
+
+                <p style="margin-top: 1rem;"><strong>Data Quality:</strong> The RCSB PDB contains experimentally determined protein structures solved using X-ray crystallography, NMR spectroscopy, cryo-EM, and other methods. AlphaFold structures represent high-confidence AI predictions for proteins without experimental structures.</p>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <div class="footer-links">
+                <a href="https://github.com/saurabhgayali/ProtPeek" target="_blank">GitHub Repository</a>
+                <a href="https://github.com/saurabhgayali/ProtPeek/releases/tag/v1" target="_blank">Release Notes</a>
+                <a href="https://www.rcsb.org/" target="_blank">RCSB PDB</a>
+                <a href="https://www.uniprot.org/" target="_blank">UniProt</a>
+            </div>
+            <p>ProtPeek v1.0 • Developed by Saurabh Gayali</p>
+            <p style="font-size: 0.85rem; margin-top: 1rem;">Built for researchers, educators, and students of structural biology</p>
+        </footer>
+    </main>
+
+    <script>
+        // Theme Toggle Functionality
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            
+            if (html.classList.contains('dark-mode')) {
+                html.classList.remove('dark-mode');
+                localStorage.setItem('theme', 'light');
+                icon.textContent = '🌙';
+            } else {
+                html.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark');
+                icon.textContent = '☀️';
+            }
+        }
+
+        // Load saved theme preference
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            
+            if (savedTheme === 'dark' || (savedTheme === null && prefersDark)) {
+                html.classList.add('dark-mode');
+                icon.textContent = '☀️';
+            } else {
+                html.classList.remove('dark-mode');
+                icon.textContent = '🌙';
+            }
+        }
+
+        // Initialize theme on page load
+        document.addEventListener('DOMContentLoaded', loadTheme);
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                const html = document.documentElement;
+                const icon = document.getElementById('theme-icon');
+                if (e.matches) {
+                    html.classList.add('dark-mode');
+                    icon.textContent = '☀️';
+                } else {
+                    html.classList.remove('dark-mode');
+                    icon.textContent = '🌙';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
